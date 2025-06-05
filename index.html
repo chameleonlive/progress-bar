@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Progress Bar</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        font-family: sans-serif;
+      }
+      .container {
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .progress {
+        position: relative;
+        width: 90%;
+        height: 30px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        overflow: hidden;
+      }
+      .progress .bar {
+        height: 100%;
+        background-color: #aaa;
+        transition: width 0.3s ease;
+      }
+      .progress .description {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #000;
+      }
+      .progress .progress-text {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #000;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="progress">
+        <div class="bar" style="width: 50%"></div>
+        <div class="description">description</div>
+        <div class="progress-text">current / target</div>
+      </div>
+    </div>
+    <script
+      src="https://cdn.socket.io/4.2.0/socket.io.min.js"
+      type="text/javascript"
+    ></script>
+    <script>
+      const urlSearchParams = new URLSearchParams(window.location.search);
+      const params = Object.fromEntries(urlSearchParams.entries());
+
+      const debug = params.debug === "true";
+      const local_test = params.local_test === "true";
+      const channel = params.channel;
+
+      const socket_url = local_test
+        ? "http://localhost:6123"
+        : "https://gateway.ahiruibi.moe";
+      const socket = io(socket_url);
+
+      if (channel) {
+        socket.emit("join", channel);
+      }
+
+      function updateProgressBar(progress) {
+        const bar = document.querySelector(".progress .bar");
+        const description = document.querySelector(".progress .description");
+        const progressText = document.querySelector(".progress .progress-text");
+
+        bar.style.width = `${(progress.current / progress.target) * 100}%`;
+        description.textContent = progress.description;
+        progressText.textContent = `${progress.current} / ${progress.target}`;
+      }
+
+      //Perform Action on event
+      socket.on("progress", (progress) => {
+        console.log(progress);
+        updateProgressBar(progress);
+      });
+
+      socket.emit("getProgress");
+    </script>
+  </body>
+</html>
